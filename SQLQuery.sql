@@ -13,6 +13,11 @@ Select COUNT(id) as PMTD_Total_Applications
 from [Bank Loan DB]..bank_loan_data
 Where MONTH(issue_date)=11 AND YEAR(issue_date)=2021
 
+
+--Total Funded Amount
+select sum(loan_amount) as Total_Funded_Amount 
+From [Bank Loan DB]..bank_loan_data
+
 --MTD Total Funded Amount
 Select Sum(loan_amount) as MTD_Total_Funded_Amount from [Bank Loan DB]..bank_loan_data
 Where MONTH(issue_date)=12 AND YEAR(issue_date)=2021
@@ -31,7 +36,7 @@ Where MONTH(issue_date)=12 AND YEAR(issue_date)=2021
 
 
 -- PMTD Total_Amount_Received
-Select Sum(total_payment) as MTD_Total_Amount_Received from [Bank Loan DB]..bank_loan_data 
+Select Sum(total_payment) as PMTD_Total_Amount_Received from [Bank Loan DB]..bank_loan_data 
 Where MONTH(issue_date)=11 AND YEAR(issue_date)=2021
 
 --AVG Interest Rate 
@@ -108,27 +113,92 @@ Where loan_status = 'charged off'
 
 
 --Loan Status Grid
-SELECT loan_status as LoanStatus 
+SELECT loan_status  
 , Count(id) as TotalLoanApplications,
 Sum(loan_amount) as TotalFundedAmount, 
-Sum(total_payment) as TotalAmountReceived
+Sum(total_payment) as TotalAmountReceived,
+Round(AVG(int_rate) * 100, 2) as InterestRatePercentage,
+Round(AVG(dti) * 100, 2) as DtiPercentage
 From [Bank Loan DB]..bank_loan_data
 Group by loan_status
 
 --MTD Loan Status Grid
-SELECT loan_status as LoanStatus 
+SELECT loan_status  
 , Count(id) as TotalLoanApplications,
 Sum(loan_amount) as TotalFundedAmount, 
-Sum(total_payment) as TotalAmountReceived
+Sum(total_payment) as TotalAmountReceived,
+Round(AVG(int_rate) * 100, 2) as InterestRatePercentage,
+Round(AVG(dti) * 100, 2) as DtiPercentage
 From [Bank Loan DB]..bank_loan_data
 Where Month(issue_date) =12 
 Group by loan_status
 
 --PMTD Loan Status Grid
-SELECT loan_status as LoanStatus 
+SELECT loan_status  
 , Count(id) as TotalLoanApplications,
 Sum(loan_amount) as TotalFundedAmount, 
-Sum(total_payment) as TotalAmountReceived
+Sum(total_payment) as TotalAmountReceived,
+Round(AVG(int_rate) * 100, 2) as InterestRatePercentage,
+Round(AVG(dti) * 100, 2) as DtiPercentage
 From [Bank Loan DB]..bank_loan_data
 Where Month(issue_date) =11
 Group by loan_status
+
+--Monthly Trend By Issue Date
+Select 
+MONTH(issue_date) as MonthNumber,
+DATENAME(MONTH,issue_date) as Month,
+Count(id) as TotalApplicationsOfLoans,
+sum(loan_amount) as TotalLoans ,
+sum(total_payment) as TotalPayment
+From [Bank Loan DB]..bank_loan_data
+Group by DATENAME(MONTH,issue_date) ,MONTH(issue_date)
+Order By MonthNumber
+
+--Regional Analysis by state
+Select address_state as State,
+Count(id) as TotalApplicationsOfLoans,
+Sum(loan_amount) as TotalLoans ,
+Sum(total_payment) as TotalPayment
+From [Bank Loan DB]..bank_loan_data
+Group by address_state
+Order By sum(loan_amount) desc
+
+--Analysis by Long Term  
+Select term as Term,
+Count(id) as TotalApplicationsOfLoans,
+Sum(loan_amount) as TotalLoans ,
+Sum(total_payment) as TotalPayment
+From [Bank Loan DB]..bank_loan_data
+Group BY Term
+Order By TotalApplicationsOfLoans desc
+
+
+--Analysis by Employee Lenght
+Select emp_length as Employee_Lenght,
+Count(id) as TotalApplicationsOfLoans,
+Sum(loan_amount) as TotalLoans ,
+Sum(total_payment) as TotalPayment
+From [Bank Loan DB]..bank_loan_data
+Group BY emp_length 
+Order By  Count(id) DESC
+
+-- Loan Purpose Breakdown Analysis
+select purpose as PurposeOfLoan,
+Count(id) as TotalApplicationsOfLoans,
+Sum(loan_amount) as TotalLoans ,
+Sum(total_payment) as TotalPayment
+From [Bank Loan DB]..bank_loan_data
+Group BY purpose 
+Order By Count(id) DESC
+
+
+-- Home Ownership Analysis
+Select home_ownership as HomeOwnership,
+Count(id) as TotalApplicationsOfLoans,
+Sum(loan_amount) as TotalLoans ,
+Sum(total_payment) as TotalPayment
+From [Bank Loan DB]..bank_loan_data
+Where grade = 'A' AND address_state = 'CA'
+Group BY home_ownership
+Order By Count(id) DESC
